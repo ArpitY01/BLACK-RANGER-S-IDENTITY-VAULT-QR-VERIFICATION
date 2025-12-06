@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Operative ID System — Improved</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- QR code generator (simple, browser-friendly) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+
+  <!-- Html5 QR Code scanner -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <style>
+    /* Theme colors used in JS/CSS (kept here to avoid using theme() which isn't valid CSS) */
+    :root {
+      --primary-dark: #0f172a; /* slate-900 */
+      --card-bg: #1e293b; /* slate-800 */
+      --accent-blue: #38bdf8; /* sky-400 */
+      --accent-dark: #0369a1; /* sky-700 */
+      --success: #4ade80; /* green-400 */
+      --danger: #f87171; /* red-400 */
+    }
+
+    /* Scanner animation */
+    @keyframes scan-move {
+      0% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(calc(100% - 6px));
+      }
+      100% {
+        transform: translateY(0);
+      }
+    }
+
+    .scan-line {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, transparent, var(--danger), transparent);
+      animation: scan-move 3s infinite linear;
+      z-index: 10;
+      filter: drop-shadow(0 0 8px var(--danger));
+    }
+
+    /* Card subtle shadow and border left accent */
+    .card-custom {
+      background-color: var(--card-bg);
+      padding: 1.25rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+      border-left: 4px solid var(--accent-blue);
+    }
+
+    /* Make the html5-qrcode video fit container */
+    #reader video,
+    #reader canvas {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover;
+    }
+
+    /* Small responsive tweak for QR view */
+    @media (max-width: 480px) {
+      #qrcode img, #qrcode svg { width: 140px !important; height: 140px !important; }
+    }
+
+  </style>
+</head>
+
+<body class="min-h-screen bg-[color:var(--primary-dark)] text-slate-100 font-mono">
+  <nav class="flex justify-center gap-2 bg-[color:var(--accent-dark)] border-b-4 border-[color:var(--accent-blue)] shadow-lg p-3">
+    <button id="nav-create" class="px-4 py-2 rounded-lg font-bold bg-[color:var(--card-bg)] hover:bg-[color:var(--accent-blue)] hover:text-[color:var(--primary-dark)]">🆔 Register</button>
+    <button id="nav-roster" class="px-4 py-2 rounded-lg font-bold bg-[color:var(--card-bg)] hover:bg-[color:var(--accent-blue)] hover:text-[color:var(--primary-dark)]">🛡️ Roster</button>
+    <button id="nav-scan" class="px-4 py-2 rounded-lg font-bold bg-[color:var(--card-bg)] hover:bg-[color:var(--accent-blue)] hover:text-[color:var(--primary-dark)]">👁️ Scan</button>
+    <button id="nav-admin" class="px-4 py-2 rounded-lg font-bold bg-[color:var(--card-bg)] hover:bg-[color:var(--accent-blue)] hover:text-[color:var(--primary-dark)]">📝 Logs</button>
+  </nav>
+
+  <main class="flex justify-center p-8">
+    <div id="content" class="w-full max-w-xl">
+
+      <!-- CREATE -->
+      <section id="create-section" class="section">
+        <div id="create-form-view" class="card-custom">
+          <h2 class="text-[color:var(--accent-blue)] text-center text-2xl font-bold mb-6 tracking-wider">IDENTITY GENERATION</h2>
+
+          <form id="create-form" novalidate>
+
+            <div class="mb-4">
+              <label for="name" class="block text-[color:var(--accent-blue)] text-sm font-bold mb-2">OPERATIVE NAME</label>
+              <input id="name" name="name" required type="text" placeholder="Enter Name"
+                     class="w-full p-3 bg-slate-700 border border-[color:var(--accent-dark)] rounded-md text-slate-100 focus:border-[color:var(--accent-blue)] focus:ring-4 focus:ring-[color:var(--accent-blue)]/30 transition duration-300" />
+            </div>
+
+            <div class="mb-4">
+              <label for="mobile" class="block text-[color:var(--accent-blue)] text-sm font-bold mb-2">COMM LINK ID (Mobile)</label>
+              <input id="mobile" name="mobile" inputmode="tel" pattern="^[0-9]{10}$" maxlength="10" placeholder="XXXXXXXXXX"
+                     class="w-full p-3 bg-slate-700 border border-[color:var(--accent-dark)] rounded-md text-slate-100 focus:border-[color:var(--accent-blue)] focus:ring-4 focus:ring-[color:var(--accent-blue)]/30 transition duration-300" />
+              <p class="text-xs text-slate-400 mt-1">Optional — 10 digits.</p>
+            </div>
+
+            <div class="mb-6">
+              <label for="color" class="block text-[color:var(--accent-blue)] text-sm font-bold mb-2">SQUADRON COLOR</label>
+              <select id="color" name="color" required
+                      class="w-full p-3 bg-slate-700 border border-[color:var(--accent-dark)] rounded-md text-slate-100 focus:border-[color:var(--accent-blue)] focus:ring-4 focus:ring-[color:var(--accent-blue)]/30 transition duration-300">
+                <option value="" disabled selected>-- Select Division --</option>
+                <option value="Red">Red</option>
+                <option value="Blue">Blue</option>
+                <option value="Black">Black</option>
+                <option value="Pink">Pink</option>
+                <option value="Yellow">Yellow</option>
+              </select>
+            </div>
+
+            <button id="generate-btn" type="submit" class="w-full p-4 rounded-md font-bold uppercase tracking-wider mt-4 bg-[color:var(--accent-blue)] text-[color:var(--primary-dark)] hover:bg-sky-300">ENCODE IDENTITY</button>
+          </form>
+        </div>
+
+        <div id="create-qr-view" class="card-custom bg-white text-slate-900 border-l-4 border-[color:var(--success)] hidden text-center">
+          <h3 class="text-[color:var(--success)] text-xl font-bold mb-6">ACCESS GRANTED</h3>
+          <div id="qrcode" class="p-3 border-4 border-dashed border-slate-900 inline-block bg-white"></div>
+          <p id="qr-info-text" class="font-bold mt-5 text-lg"></p>
+          <button id="new-entry" class="w-full p-4 rounded-md font-bold mt-5 bg-slate-900 text-white hover:bg-slate-700">NEW ENTRY</button>
+        </div>
+      </section>
+
+      <!-- ROSTER -->
+      <section id="roster-section" class="section hidden">
+        <div class="card-custom w-full max-w-xl">
+          <h2 class="text-[color:var(--accent-blue)] text-center text-2xl font-bold mb-6 tracking-wider">ACTIVE PERSONNEL</h2>
+          <div id="roster-list">
+            <p class="text-center text-slate-500 italic p-4">Database Empty</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCAN -->
+      <section id="scan-section" class="section hidden">
+        <div class="card-custom">
+          <h2 class="text-[color:var(--accent-blue)] text-center text-2xl font-bold mb-8 tracking-wider">RETINA SCAN</h2>
+
+          <div id="scanner-view" class="p-2 border-4 border-slate-700 rounded-lg shadow-xl relative">
+            <h4 class="text-center text-xs text-[color:var(--accent-blue)] mb-2 tracking-widest">A C C E S S &nbsp; P O R T</h4>
+            <div class="relative w-full min-h-[300px] overflow-hidden border-4 border-[color:var(--accent-blue)] bg-slate-900/50">
+              <div class="scan-line" aria-hidden="true"></div>
+              <div id="reader" class="w-full h-[300px]"></div>
+            </div>
+            <p class="text-center text-xs text-slate-500 mt-2">Position QR code within the frame.</p>
+          </div>
+
+          <div id="scan-result-view" class="text-center p-6 hidden mt-4 border-l-4 border-slate-700">
+            <h1 id="scan-status" class="text-5xl font-extrabold mb-4 animate-pulse" style="text-shadow: 0 0 20px currentColor;"></h1>
+            <p id="scan-subject" class="text-slate-300 mb-6 text-lg"></p>
+            <button id="reset-scanner" class="w-full p-4 rounded-md font-bold bg-slate-900 text-white hover:bg-slate-700">RESET SCANNER</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADMIN -->
+      <section id="admin-section" class="section hidden">
+        <div class="card-custom w-full max-w-xl">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-[color:var(--accent-blue)] text-2xl font-bold tracking-wider">SECURITY LOGS</h2>
+            <button id="wipe-btn" class="text-[color:var(--danger)] border border-[color:var(--danger)] p-2 rounded-md text-sm hover:bg-[color:var(--danger)] hover:text-white transition">WIPE ALL</button>
+          </div>
+          <div id="logs-list">
+            <p class="text-center text-slate-500 italic p-4">Log History Empty</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    // ------------------ Utilities ------------------
+    const STORAGE_KEYS = { RANGERS: 'rangers_v1', LOGS: 'logs_v1' };
+
+    function getStorage(key, fallback = []) {
+      try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+      catch (e) { return fallback; }
+    }
+    function setStorage(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+
+    // Ensure storage arrays exist
+    if (!localStorage.getItem(STORAGE_KEYS.RANGERS)) setStorage(STORAGE_KEYS.RANGERS, []);
+    if (!localStorage.getItem(STORAGE_KEYS.LOGS)) setStorage(STORAGE_KEYS.LOGS, []);
+
+    // ------------------ CREATE ID ------------------
+    const form = document.getElementById('create-form');
+    const createFormView = document.getElementById('create-form-view');
+    const createQrView = document.getElementById('create-qr-view');
+    const qrcodeDiv = document.getElementById('qrcode');
+    const qrInfoText = document.getElementById('qr-info-text');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const mobile = document.getElementById('mobile').value.trim();
+      const color = document.getElementById('color').value;
+
+      if (!name || !color) return alert('OPERATIVE NAME and SQUADRON COLOR are required.');
+
+      // generate stable-ish ID
+      const newId = `ID-${color.toUpperCase()}-${Math.floor(Math.random()*9000)+1000}`;
+      const payload = { name, mobile: mobile || null, color, id: newId };
+
+      // persist
+      const rangers = getStorage(STORAGE_KEYS.RANGERS);
+      rangers.push(payload);
+      setStorage(STORAGE_KEYS.RANGERS, rangers);
+
+      // render QR using qrcode.min.js
+      qrcodeDiv.innerHTML = '';
+      try {
+        const dataStr = JSON.stringify(payload);
+        const dataUrl = await QRCode.toDataURL(dataStr, { width: 180, margin: 1 });
+        const img = document.createElement('img');
+        img.src = dataUrl;
+        img.alt = `QR for ${payload.name}`;
+        img.width = 180; img.height = 180;
+        qrcodeDiv.appendChild(img);
+      } catch (err) {
+        qrcodeDiv.textContent = 'QR generation failed.';
+        console.error(err);
+      }
+
+      qrInfoText.textContent = `${payload.name} // ${payload.color.toUpperCase()}`;
+
+      // toggle views
+      createFormView.classList.add('hidden');
+      createQrView.classList.remove('hidden');
+    });
+
+    document.getElementById('new-entry').addEventListener('click', () => {
+      // reset form and go back to create
+      form.reset();
+      createQrView.classList.add('hidden');
+      createFormView.classList.remove('hidden');
+    });
+
+    // ------------------ ROSTER ------------------
+    function renderRoster() {
+      const rangers = getStorage(STORAGE_KEYS.RANGERS);
+      const listDiv = document.getElementById('roster-list');
+      listDiv.innerHTML = '';
+
+      if (!rangers.length) {
+        listDiv.innerHTML = '<p class="text-center text-slate-500 italic p-4">Database Empty</p>';
+        return;
+      }
+
+      const table = document.createElement('table');
+      table.className = 'w-full border-collapse text-sm';
+      table.innerHTML = `
+        <thead>
+          <tr class="bg-[color:var(--accent-dark)] text-[color:var(--accent-blue)] text-left tracking-wider">
+            <th class="p-3">NAME</th>
+            <th class="p-3">DIVISION</th>
+            <th class="p-3 text-right">ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="roster-tbody"></tbody>`;
+
+      listDiv.appendChild(table);
+      const tbody = table.querySelector('#roster-tbody');
+
+      rangers.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-slate-700 hover:bg-slate-800';
+        tr.innerHTML = `
+          <td class="p-3 font-bold">${escapeHtml(r.name)}</td>
+          <td class="p-3" style="color:${r.color.toLowerCase()}">${r.color.toUpperCase()}</td>
+          <td class="p-3 text-right">
+            <button data-id="${r.id}" class="revoke-btn text-[color:var(--danger)] border border-[color:var(--danger)] px-2 py-1 rounded-sm text-xs hover:bg-[color:var(--danger)] hover:text-white">REVOKE</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('.revoke-btn').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          const id = ev.currentTarget.dataset.id;
+          if (!confirm('Revoke this ID?')) return;
+          const updated = getStorage(STORAGE_KEYS.RANGERS).filter(r => r.id !== id);
+          setStorage(STORAGE_KEYS.RANGERS, updated);
+          renderRoster();
+        });
+      });
+    }
+
+    // ------------------ SCANNER ------------------
+    let currentScanner = null;
+
+    function startScanner() {
+      stopScanner();
+
+      document.getElementById('scanner-view').classList.remove('hidden');
+      document.getElementById('scan-result-view').classList.add('hidden');
+
+      currentScanner = new Html5Qrcode('reader');
+      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+      currentScanner.start(
+        { facingMode: 'environment' },
+        config,
+        (decodedText) => onScanSuccess(decodedText),
+        (errorMessage) => {
+          // optional: console.debug(errorMessage)
+        }
+      ).catch(err => {
+        console.error('Scanner start failed', err);
+        alert('Unable to access camera. Make sure you allowed camera permissions.');
+      });
+    }
+
+    function stopScanner() {
+      if (currentScanner) {
+        currentScanner.stop().then(() => currentScanner.clear()).catch(() => {});
+        currentScanner = null;
+      }
+    }
+
+    function onScanSuccess(decodedText) {
+      // handle single result and stop scanner
+      stopScanner();
+      verifyRanger(decodedText);
+    }
+
+    function verifyRanger(qrData) {
+      let status = 'DENIED';
+      let scannedName = 'Unknown Subject';
+      let statusColor = 'text-[color:var(--danger)]';
+
+      try {
+        const parsed = JSON.parse(qrData);
+        const rangers = getStorage(STORAGE_KEYS.RANGERS);
+        const isValid = rangers.some(r => r.id === parsed.id);
+
+        status = isValid ? 'GRANTED' : 'DENIED';
+        scannedName = parsed.name || 'Unknown Operative';
+        statusColor = isValid ? 'text-[color:var(--success)]' : 'text-[color:var(--danger)]';
+
+        // Log it (use ISO timestamp)
+        const logs = getStorage(STORAGE_KEYS.LOGS);
+        logs.push({ time: new Date().toISOString(), name: parsed.name || 'Unknown', status });
+        setStorage(STORAGE_KEYS.LOGS, logs);
+
+      } catch (e) {
+        status = 'DENIED';
+        scannedName = 'Corrupt Data / Invalid QR';
+        statusColor = 'text-[color:var(--danger)]';
+      }
+
+      const statusH1 = document.getElementById('scan-status');
+      statusH1.textContent = status;
+      statusH1.className = `text-5xl font-extrabold mb-4 animate-pulse ${statusColor}`;
+
+      document.getElementById('scan-subject').textContent = `Subject: ${scannedName}`;
+
+      document.getElementById('scanner-view').classList.add('hidden');
+      document.getElementById('scan-result-view').classList.remove('hidden');
+    }
+
+    document.getElementById('reset-scanner').addEventListener('click', () => startScanner());
+
+    // ------------------ LOGS ------------------
+    function renderLogs() {
+      const logs = getStorage(STORAGE_KEYS.LOGS).slice().reverse();
+      const listDiv = document.getElementById('logs-list');
+      listDiv.innerHTML = '';
+
+      if (!logs.length) {
+        listDiv.innerHTML = '<p class="text-center text-slate-500 italic p-4">Log History Empty</p>';
+        return;
+      }
+
+      const table = document.createElement('table');
+      table.className = 'w-full border-collapse';
+      table.innerHTML = `
+        <thead>
+          <tr class="bg-[color:var(--accent-dark)] text-[color:var(--accent-blue)] text-left text-sm tracking-wider">
+            <th class="p-3">TIME</th>
+            <th class="p-3">SUBJECT</th>
+            <th class="p-3">RESULT</th>
+          </tr>
+        </thead>
+        <tbody id="logs-tbody"></tbody>`;
+
+      listDiv.appendChild(table);
+      const tbody = table.querySelector('#logs-tbody');
+
+      logs.forEach(log => {
+        const date = new Date(log.time);
+        const timeStr = isNaN(date) ? log.time : date.toLocaleString();
+        const statusColor = log.status === 'GRANTED' ? 'text-[color:var(--success)]' : 'text-[color:var(--danger)]';
+
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-slate-700 hover:bg-slate-800 text-sm';
+        tr.innerHTML = `
+          <td class="p-3 text-slate-500">${timeStr}</td>
+          <td class="p-3">${escapeHtml(log.name)}</td>
+          <td class="p-3 font-bold ${statusColor}">${log.status}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('wipe-btn').addEventListener('click', () => {
+      if (!confirm('WARNING: Wipe ALL data (Rangers and Logs)? This cannot be undone.')) return;
+      localStorage.removeItem(STORAGE_KEYS.RANGERS);
+      localStorage.removeItem(STORAGE_KEYS.LOGS);
+      // reinitialize
+      setStorage(STORAGE_KEYS.RANGERS, []);
+      setStorage(STORAGE_KEYS.LOGS, []);
+      window.location.reload();
+    });
+
+    // ------------------ NAV & init ------------------
+    function showSection(id) {
+      stopScanner();
+      document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(`${id}-section`).classList.remove('hidden');
+
+      if (id === 'roster') renderRoster();
+      if (id === 'scan') startScanner();
+      if (id === 'admin') renderLogs();
+    }
+
+    document.getElementById('nav-create').addEventListener('click', () => showSection('create'));
+    document.getElementById('nav-roster').addEventListener('click', () => showSection('roster'));
+    document.getElementById('nav-scan').addEventListener('click', () => showSection('scan'));
+    document.getElementById('nav-admin').addEventListener('click', () => showSection('admin'));
+
+    function escapeHtml(unsafe) {
+      if (unsafe == null) return '';
+      return String(unsafe).replace(/[&<>"]+/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] || c;
+      });
+    }
+
+    // default
+    document.addEventListener('DOMContentLoaded', () => showSection('create'));
+
+  </script>
+</body>
+</html>
