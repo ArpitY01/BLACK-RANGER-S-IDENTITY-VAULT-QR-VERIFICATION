@@ -19,7 +19,7 @@ body {
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
-  padding-top: 80px;
+  /* padding-top: 80px; */
 }
 
 /* Scrollbar styling */
