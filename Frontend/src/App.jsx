@@ -6,6 +6,9 @@ import './App.css';
 
 // --- FEATURE 1: REGISTRATION ---
 function CreateID() {
+ /* const l =fetch('api/',{
+    method:"GET"
+  })*/
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [color, setColor] = useState('');
@@ -25,8 +28,9 @@ function CreateID() {
 
     setGeneratedData(rangerData);
   };
-
   return (
+    
+    
     <div className="container">
       {!generatedData ? (
         <div className="card">
