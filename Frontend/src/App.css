@@ -1,0 +1,306 @@
+/* --- CSS Variables for easy color change --- */
+:root {
+  --primary-color: #0d47a1; /* Dark Blue */
+  --primary-dark: #002e73;
+  --secondary-color: #42a5f5; /* Lighter Blue (Accent) */
+  --text-light: #e0e0e0;
+  --text-dark: #1e1e1e;
+  --background-dark: #121212; /* Very Dark Background */
+  --card-bg: #1e1e1e; /* Darker Card background */
+  --success: #66bb6a; /* Green for GRANTED */
+  --danger: #ef5350; /* Red for DENIED/REVOKE */
+  --font-family: 'Space Mono', 'Courier New', monospace;
+}
+
+/* --- Global Reset and Body Styles --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family); 
+}
+
+body {
+  background-color: var(--background-dark);
+  color: var(--text-light);
+  min-height: 100vh;
+}
+
+/* --- Layout and Card Styles --- */
+.container {
+  display: flex;
+  justify-content: center;
+  padding: 30px 15px;
+}
+
+.card {
+  background-color: var(--card-bg);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--primary-color), 0.3);
+  width: 100%;
+  max-width: 450px;
+  border-left: 5px solid var(--secondary-color);
+}
+
+.title {
+  color: var(--secondary-color);
+  text-align: center;
+  margin-bottom: 25px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(var(--secondary-color), 0.5);
+}
+
+/* --- Navigation Bar --- */
+.navbar {
+  display: flex;
+  justify-content: center;
+  background-color: var(--primary-dark);
+  padding: 10px 0;
+  border-bottom: 3px solid var(--secondary-color);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.nav-btn {
+  text-decoration: none;
+  color: var(--text-light);
+  padding: 10px 20px;
+  margin: 0 8px;
+  border-radius: 8px;
+  transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.nav-btn:hover {
+  background-color: var(--secondary-color);
+  color: var(--primary-dark);
+  box-shadow: 0 0 15px var(--secondary-color);
+}
+
+/* --- Form Styles --- */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--secondary-color);
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+input[type="text"], 
+input[type="tel"], 
+select {
+  width: 100%;
+  padding: 12px;
+  background-color: #2a2a2a;
+  border: 1px solid var(--primary-color);
+  color: var(--text-light);
+  border-radius: 6px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-size: 1rem;
+}
+
+input:focus, select:focus {
+  border-color: var(--secondary-color);
+  outline: none;
+  box-shadow: 0 0 10px rgba(var(--secondary-color), 0.5);
+}
+
+/* --- Button Styles --- */
+.action-btn {
+  width: 100%;
+  padding: 15px;
+  background-color: var(--secondary-color);
+  color: var(--primary-dark);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 10px;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+.action-btn:hover {
+  background-color: #79c5ff; 
+}
+
+.action-btn:active {
+  transform: translateY(2px);
+}
+
+.delete-btn {
+    background-color: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.delete-btn:hover {
+    background-color: var(--danger);
+    color: var(--text-light);
+}
+
+/* --- QR Code Display Styles (CreateID component) --- */
+.qr-card {
+    background-color: #f7f7f7 !important; 
+    color: var(--text-dark) !important;
+    text-align: center;
+    border-left: 5px solid var(--success);
+}
+
+.qr-title {
+    color: var(--success);
+    margin: 0 0 25px 0;
+    text-shadow: none;
+}
+
+.qr-code-wrapper {
+    padding: 15px;
+    border: 3px dashed var(--primary-dark);
+    display: inline-block;
+    background-color: white; 
+}
+
+.qr-info {
+    font-weight: bold;
+    margin-top: 25px;
+    color: var(--primary-dark);
+    font-size: 1.1rem;
+}
+
+.qr-card .action-btn {
+    background-color: var(--primary-dark);
+    color: var(--text-light);
+    margin-top: 20px;
+}
+
+/* --- Scanner Styles --- */
+/* The camera view itself is rendered by the library inside #reader */
+.scanner-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 250px; 
+    overflow: hidden;
+    border: 3px solid var(--secondary-color);
+}
+
+/* Style for the animated laser line */
+.scan-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--danger), transparent);
+    animation: scan-move 3s infinite linear;
+    z-index: 10;
+    box-shadow: 0 0 15px var(--danger);
+}
+
+@keyframes scan-move {
+    0% { top: 0; }
+    50% { top: calc(100% - 3px); }
+    100% { top: 0; }
+}
+
+/* Style the result display for scanner */
+.scan-result-display {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.scan-status-granted {
+    color: var(--success);
+    font-size: 3rem;
+    text-shadow: 0 0 20px currentColor;
+    margin-bottom: 10px;
+}
+
+.scan-status-denied {
+    color: var(--danger);
+    font-size: 3rem;
+    text-shadow: 0 0 20px currentColor;
+    margin-bottom: 10px;
+}
+
+.scan-subject {
+    color: var(--text-light);
+    margin-bottom: 25px;
+    font-size: 1rem;
+}
+
+/* --- Roster and Logs Table Styles --- */
+.roster-card {
+    max-width: 650px !important;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+thead th {
+    background-color: var(--primary-dark);
+    color: var(--secondary-color);
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 2px solid var(--secondary-color);
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+tbody td {
+    padding: 10px 15px;
+    border-bottom: 1px dashed #333;
+    color: var(--text-light);
+    font-size: 0.95rem;
+}
+
+tbody tr:hover {
+    background-color: #2a2a2a;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.log-time {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.log-status-granted {
+    color: var(--success);
+    font-weight: bold;
+}
+
+.log-status-denied {
+    color: var(--danger);
+    font-weight: bold;
+}
+
+.log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.empty-message {
+    text-align: center;
+    color: #555;
+    padding: 20px;
+    font-style: italic;
+}
