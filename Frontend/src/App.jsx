@@ -6,6 +6,9 @@ import './App.css'; // Make sure this path is correct
 
 // --- FEATURE 1: CREATE ID (Registration Form) ---
 function CreateID() {
+ /* const l =fetch('api/',{
+    method:"GET"
+  })*/
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [color, setColor] = useState('');
@@ -30,8 +33,9 @@ function CreateID() {
     // 4. Show the QR code
     setGeneratedData(rangerData);
   };
-
   return (
+    
+    
     <div className="container">
       {!generatedData ? (
         <div className="card">

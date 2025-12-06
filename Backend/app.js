@@ -2,13 +2,28 @@ const express = require('express');
 const app = express();
 
 const rangerModel = require('./rangermodel')
+app.use(express.urlencoded());
 
 app.get('/',(req,res)=>{
-    res.send("hey")
+    let a = [
+        {
+            name:"a"
+        },
+        {
+            name:"b"
+
+        },
+        {
+            name:"c"
+
+        }
+    ]
+    res.send(a)
 });
 
 app.get('/create',async (req,res)=>{
-    res.send("create request sent");
+    const a = await fetch('/',{method:"GET"});
+    res.send("huhu "+ a);
 });
 app.get('/update',async (req,res)=>{
     res.send("update request sent");
